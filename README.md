@@ -105,13 +105,20 @@ Please help ethcode developers continue their work.
 Ethereum donation address: [0xd22fE4aEFed0A984B1165dc24095728EE7005a36](https://etherscan.io/address/0xd22fE4aEFed0A984B1165dc24095728EE7005a36)
 
 ## Development
-Run following commands in the terminal
+### Run following commands in the terminal
 
 ```shell
 yarn install
 yarn run build
 ```
 And then press F5, in Extension Development Host session, run `Ethereum: Solidity compile` command from command palette.
+
+### Generate Typescript types for protobuf
+```shell
+PROTOC_GEN_TS_PATH="./node_modules/.bin/protoc-gen-ts"
+OUT_DIR="./ext-src/"
+protoc --plugin="protoc-gen-ts=${PROTOC_GEN_TS_PATH}" --js_out="import_style=commonjs,binary:${OUT_DIR}" --ts_out="${OUT_DIR}" services/ethereum.proto
+```
 
 ## Packaging
 ```shell

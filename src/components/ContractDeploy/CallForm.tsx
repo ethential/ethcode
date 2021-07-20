@@ -9,7 +9,7 @@ interface IProps {
   constructorInputRef: MutableRefObject<ConstructorInput | ConstructorInput[] | null>;
   deployedResult: TransactionResult | undefined;
   abi: ABIDescription[];
-  currAccount: IAccount;
+  currAccount: string;
   vscode: any;
 }
 
@@ -76,7 +76,7 @@ const CallForm: React.FC<IProps> = (props: IProps) => {
         gasSupply: props.constructorInputRef.current,
         // TODO: add value supply in case of payable functions
         value: payableAmount,
-        from: currAccount.checksumAddr ? currAccount.checksumAddr : currAccount.value,
+        from: currAccount,
       },
       testNetId: testNetID,
     });

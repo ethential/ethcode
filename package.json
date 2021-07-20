@@ -86,6 +86,16 @@
         "category": "Ethcode"
       },
       {
+        "command": "ethcode.account.ganache.list",
+        "title": "List ganache testnet accounts",
+        "category": "Ethcode"
+      },
+      {
+        "command": "ethcode.account.balance",
+        "title": "Get balance",
+        "category": "Ethcode"
+      },
+      {
         "command": "ethcode.transaction.set",
         "title": "Set ethereum transaction",
         "category": "Ethcode"
@@ -93,6 +103,11 @@
       {
         "command": "ethcode.transaction.build",
         "title": "Build Ethereum raw transaction",
+        "category": "Ethcode"
+      },
+      {
+        "command": "ethcode.transaction.gas.get",
+        "title": "Get gas estimate for transaction",
         "category": "Ethcode"
       },
       {
@@ -111,11 +126,6 @@
       {
         "command": "ethcode.contract.input.load",
         "title": "Ethcode: Load constructor inputs from JSON"
-      },
-      {
-        "command": "ethcode.contract.gas.get",
-        "title": "Get gas estimate for transaction",
-        "category": "Ethcode"
       },
       {
         "command": "ethcode.contract.gas.set",
@@ -160,6 +170,7 @@
     "@grpc/proto-loader": "^0.5.2",
     "@primer/octicons-react": "^9.1.1",
     "@svgr/webpack": "4.1.0",
+    "@types/google-protobuf": "^3.15.3",
     "@types/randombytes": "^2.0.0",
     "@types/react-tabs": "^2.3.1",
     "@types/underscore": "^1.9.4",
@@ -179,6 +190,7 @@
     "ethereumjs-tx": "^2.1.2",
     "file-loader": "3.0.1",
     "fs-extra": "^9.0.1",
+    "google-protobuf": "^3.17.3",
     "html-webpack-plugin": "4.0.0-beta.5",
     "identity-obj-proxy": "3.0.0",
     "is-wsl": "^1.1.0",
@@ -217,6 +229,7 @@
     "styled-components": "^5.2.1",
     "terser-webpack-plugin": "1.2.3",
     "ts-pnp": "1.1.2",
+    "ts-protoc-gen": "^0.15.0",
     "typescript": "^4.0.5",
     "underscore": "^1.12.1",
     "url-loader": "1.1.2",
@@ -257,9 +270,11 @@
     "vscode:prepublish": "node scripts/build.js && tsc -p tsconfig.extension.json",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "build": "node scripts/build.js && tsc -p tsconfig.extension.json",
+    "postbuild": "yarn run copy-files",
     "build:stats": "node scripts/build.js --json > stats.json",
     "test": "node scripts/test.js",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "copy-files": "cp -r ./ext-src/services ./build/ext-src/"
   },
   "eslintConfig": {
     "extends": "react-app"

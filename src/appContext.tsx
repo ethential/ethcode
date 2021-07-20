@@ -1,13 +1,15 @@
+/* eslint no-unused-vars: 0 */
+
 import { createContext } from 'react';
-import { CompilationResult, IAccount, GroupedSelectorAccounts, TransactionResult, CompiledContract } from './types';
+import { CompilationResult, GroupedSelectorAccounts, TransactionResult, CompiledContract, ABIParameter } from './types';
 
 interface ContextInterface {
   unsignedTx: string | undefined;
   setUnsgTxn: (_value: string | undefined) => void;
   pvtKey: string | undefined;
   setPvtKey: (_value: string | undefined) => void;
-  currAccount: IAccount | undefined;
-  setAccount: (_value: IAccount | undefined) => void;
+  currAccount: string | undefined;
+  setAccount: (_value: string | undefined) => void;
   accountBalance: number;
   setAccountBalance: (_value: number) => void;
   accounts: Array<GroupedSelectorAccounts> | undefined;
@@ -16,6 +18,8 @@ interface ContextInterface {
   setCompiledJSON: (_value: CompilationResult | undefined) => void;
   contract: CompiledContract | undefined;
   setCompiledContract: (_value: CompiledContract | undefined) => void;
+  constructorInputs: Array<ABIParameter> | undefined;
+  setConstructorInputs: (_value: Array<ABIParameter> | undefined) => void;
   activeFileName: string;
   setActiveFileName: (_value: string) => void;
   testNetID: string;
@@ -33,7 +37,7 @@ export const AppContext = createContext<ContextInterface>({
   pvtKey: undefined,
   setPvtKey: (_value: string | undefined) => {},
   currAccount: undefined,
-  setAccount: (_value: IAccount | undefined) => {},
+  setAccount: (_value: string | undefined) => {},
   accountBalance: 0,
   setAccountBalance: (_value: number) => {},
   accounts: [],
@@ -42,6 +46,8 @@ export const AppContext = createContext<ContextInterface>({
   setCompiledJSON: (_value: CompilationResult | undefined) => {},
   contract: undefined,
   setCompiledContract: (_value: CompiledContract | undefined) => {},
+  constructorInputs: undefined,
+  setConstructorInputs: (_value: Array<ABIParameter> | undefined) => {},
   activeFileName: '',
   setActiveFileName: (_value: string) => {},
   testNetID: 'ganache',

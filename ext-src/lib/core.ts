@@ -1,4 +1,4 @@
-import { window, ExtensionContext } from 'vscode';
+import { window, ExtensionContext, InputBoxOptions } from 'vscode';
 
 import Logger from '../utils/logger';
 import {
@@ -10,10 +10,17 @@ import {
   isComContract,
   ICombinedJSONContractsQP,
   CombinedCompiledContract,
+  ConstructorInputValue,
 } from '../types';
+import { createWorker, createAccWorker } from './workerCreator';
 
 // Create logger
 const logger = new Logger();
+const pwdInpOpt: InputBoxOptions = {
+  ignoreFocusOut: true,
+  password: true,
+  placeHolder: 'Password',
+};
 
 // Parse Standard JSON payload
 export function parseJSONPayload(context: ExtensionContext, _jsonPayload: any): void {
@@ -44,7 +51,7 @@ export function parseJSONPayload(context: ExtensionContext, _jsonPayload: any): 
               const contract: StandardCompiledContract = contracts[contractFileName][selection[0].contractKey];
               if (isStdContract(contract)) {
                 context.workspaceState.update('contract', contract);
-                logger.success('Contract loaded!');
+                logger.log('Contract loaded!');
               } else {
                 logger.error(Error('Could not parse contract.'));
               }
@@ -85,7 +92,7 @@ export function parseCombinedJSONPayload(context: ExtensionContext, _jsonPayload
         const contract: CombinedCompiledContract = contracts[selection[0].contractKey];
         if (isComContract(contract)) {
           context.workspaceState.update('contract', contract);
-          logger.success('Contract loaded!');
+          logger.log('Contract loaded!');
         } else {
           logger.error(Error('Could not parse contract.'));
         }
@@ -101,4 +108,154 @@ export function parseCombinedJSONPayload(context: ExtensionContext, _jsonPayload
       )
     );
   }
+}
+
+// Estimate Transaction Gas
+export function estimateTransactionGas(context: ExtensionContext): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const networkId = context.workspaceState.get('networkId');
+    const account: string | undefined = context.workspaceState.get('account');
+    const contract = context.workspaceState.get('contract');
+    const params: Array<ConstructorInputValue> | undefined = context.workspaceState.get('constructor-inputs');
+    let payload = {};
+    if (isComContract(contract)) {
+      const { abi, bin } = contract;
+      payload = {
+        abi,
+        bytecode: bin,
+        params: params || [],
+        from: account,
+      };
+    } else if (isStdContract(contract)) {
+      const { abi, evm } = contract;
+      payload = {
+        abi,
+        bytecode: evm.bytecode.object,
+        params: params || [],
+        from: account,
+      };
+    }
+    const txWorker = createWorker();
+    txWorker.on('message', (m: any) => {
+      if (m.error) {
+        logger.error(m.error);
+        reject(m.error);
+      } else {
+        context.workspaceState.update('gasEstimate', m.gasEstimate);
+        logger.log(m.gasEstimate);
+        resolve(m.gasEstimate);
+      }
+    });
+    logger.log('Transaction payload');
+    logger.log(JSON.stringify(payload, null, 2));
+    txWorker.send({
+      command: 'get-gas-estimate',
+      payload,
+      testnetId: networkId,
+    });
+  });
+}
+
+// Ganache deploy
+export function ganacheDeploy(context: ExtensionContext): Promise<any> {
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        const testNetId = context.workspaceState.get('networkId');
+        const account = context.workspaceState.get('account');
+        const contract = context.workspaceState.get('contract');
+        const params: Array<ConstructorInputValue> | undefined = context.workspaceState.get('constructor-inputs');
+        const gas: number | undefined = context.workspaceState.get('gasEstimate');
+        let payload = {};
+        if (isComContract(contract)) {
+          const { abi, bin } = contract;
+          payload = {
+            abi,
+            bytecode: bin,
+            params: params || [],
+            from: account,
+            gas,
+          };
+        } else if (isStdContract(contract)) {
+          const { abi, evm } = contract;
+          payload = {
+            abi,
+            bytecode: evm.bytecode.object,
+            params: params || [],
+            from: account,
+            gas,
+          };
+        }
+        const deployWorker = createWorker();
+        deployWorker.on('message', (m: any) => {
+          logger.log(`SignDeploy worker message: ${JSON.stringify(m)}`);
+          if (m.error) {
+            logger.error(m.error);
+          } else if (m.transactionResult) {
+            logger.log('Contract transaction submitted!');
+            resolve(m.transactionResult);
+          }
+        });
+
+        deployWorker.send({
+          command: 'deploy-contract',
+          payload,
+          testnetId: testNetId,
+        });
+      } catch (error) {
+        logger.error(error);
+        reject(error);
+      }
+    })();
+  });
+}
+
+export function signDeploy(context: ExtensionContext): Promise<any> {
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        const testNetId = context.workspaceState.get('networkId');
+        const account = context.workspaceState.get('account');
+        const unsignedTx = context.workspaceState.get('unsignedTx');
+        const password = await window.showInputBox(pwdInpOpt);
+        const accWorker = createAccWorker();
+        const signedDeployWorker = createWorker();
+        accWorker.on('message', (m: any) => {
+          if (m.privateKey) {
+            const { privateKey } = m;
+            signedDeployWorker.on('message', (m: any) => {
+              logger.log(`SignDeploy worker message: ${JSON.stringify(m)}`);
+              if (m.error) {
+                logger.error(m.error);
+                reject(m.error);
+              } else if (m.transactionResult) {
+                logger.success('Contract transaction submitted!');
+                resolve(m.transactionResult);
+              }
+            });
+            signedDeployWorker.send({
+              command: 'sign-deploy',
+              payload: {
+                unsignedTx,
+                pvtKey: privateKey,
+              },
+              testnetId: testNetId,
+            });
+          } else if (m.error) {
+            logger.error(m.error);
+            reject(m.error);
+          }
+        });
+        accWorker.send({
+          command: 'extract-privateKey',
+          address: account,
+          keyStorePath: context.extensionPath,
+          password: password || '',
+        });
+      } catch (error) {
+        logger.error(error);
+        reject(error);
+      }
+    })();
+  });
 }

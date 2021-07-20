@@ -7,7 +7,7 @@ import { abiHelpers } from '../../lib';
 interface IProps {
   deployedResult: TransactionResult | undefined;
   abi: ABIDescription[];
-  currAccount: IAccount;
+  currAccount: string;
   testNetId: string;
   vscode: any;
 }
@@ -72,7 +72,7 @@ const CallForm: React.FC<IProps> = (props: IProps) => {
         params: getValues('methodInputs') || [],
         gasSupply: getValues('gasSupply') || 0,
         value: payableAmount,
-        from: currAccount.checksumAddr ? currAccount.checksumAddr : currAccount.value,
+        from: currAccount,
       },
       testNetId: props.testNetId,
     });

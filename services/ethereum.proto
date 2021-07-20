@@ -1,0 +1,172 @@
+syntax = "proto3";
+
+package protoeth;
+option go_package = "protoeth";
+import "google/protobuf/empty.proto";
+
+// GetAccounts only for ganache
+message GetAccountsReq {}
+
+message TestnetReq {
+    uint32 id = 1;
+}
+
+message HashStringOrNumber {
+    string reqString = 1;
+    uint64 reqNum = 2;
+}
+
+message InfoWithIndex {
+    HashStringOrNumber req = 1;
+    uint64 index = 2;
+}
+
+message CountResp {
+    uint64 count = 1;
+}
+
+message ObjResp {
+    string respObj = 1;
+}
+
+// GetBalance -> eth.getBalance -> eth_getBalance
+message GetBalanceReq {
+    uint32 networkid = 1;
+    string address = 2;
+}
+message GetBalanceResp {
+    string balance = 1;
+}
+
+message CreateRawTransactionReq {
+    string to = 1;
+    string data = 2;
+    uint32 gas = 3;
+    uint32 value = 4;   
+}
+
+message CreateRawTransactionResp {
+    string rawTX = 1;
+}
+
+message DeploySignedTransactionReq{
+    string signedTX = 1;
+}
+
+message DeploySignedTransactionResp {
+    string txReciept = 1;
+}
+
+// Transactions
+message BuildTxRequest {
+    uint32 networkid = 1;
+    string abi = 2;
+    string bytecode = 3;
+    string params = 4;
+    string fromaddress = 5;
+    uint64 gas = 6;
+    uint64 value = 7;
+}
+
+message SendTxRequest {
+    uint32 networkid = 1;
+    string tx = 2;
+}
+
+message RawTransaction {
+    string transaction = 1;
+}
+
+
+// GetTransaction -> Eth.getTransaction -> eth_getTransactionByHAsh
+message TxHash {
+    string txhash = 1;
+}
+
+message TransactionInfo {
+    string transaction = 1;
+}
+
+message TxReceipt {
+    string txReceipt = 1;
+}
+
+message BlockNumber {
+    uint64 blocknum = 1;
+}
+
+message TxResponse {
+    string txData = 1;
+}
+
+message NumResult {
+    uint64 resultNum = 1;
+}
+
+message GetTxReq {
+    uint32 networkid = 1;
+    string txhash = 2;
+}
+
+message CallRequest {
+    uint32 networkid = 1;
+    string fn = 2;
+    string params = 3;
+    string abi = 4;
+    string address = 5;
+    string from_address = 6; // python will not allow .from so it has to be fromAddress
+    uint64 value = 7;
+    uint64 gas = 8;
+}
+
+message CallResponse {
+    string result = 1;
+}
+
+// Estimate gas
+message EstimateGasReq {
+    uint32 networkid = 1;
+    string abi = 2;
+    string bytecode = 3;
+    string params = 4;
+    string fromaddress = 5;
+    uint64 value = 6;
+}
+message EstimateGasResp {
+    string result = 1;
+}
+
+// Get ganache accounts
+message GanacheAccReq {
+    uint32 networkid = 1;
+}
+message GanacheAccRsp {
+    repeated string accounts = 1;
+    string balance = 2;
+}
+
+service ProtoEthService {
+    // Done
+    rpc GetBalance(GetBalanceReq) returns (GetBalanceResp) {};
+    rpc EstimateGas(EstimateGasReq) returns (EstimateGasResp) {};
+    rpc GetGanacheAccounts(GanacheAccReq) returns (GanacheAccRsp) {};
+    rpc BuildRawTransaction(BuildTxRequest) returns (RawTransaction) {};
+    rpc SendRawTransactions(SendTxRequest) returns (TxHash) {};
+    rpc Transact(BuildTxRequest) returns (TxHash) {};
+    // TODO
+    rpc GetTransaction(GetTxReq) returns (TransactionInfo) {};
+    rpc GetTransactionReceipt(TxHash) returns (TxReceipt) {};
+    rpc ContractCall(CallRequest) returns (CallResponse) {};
+    rpc GetHashrate(google.protobuf.Empty) returns (NumResult) {};
+    rpc GetGasPrice(google.protobuf.Empty) returns (NumResult) {};
+    rpc GetBlockNumber(google.protobuf.Empty) returns (BlockNumber) {};
+    rpc GetBlockTransactionCount(HashStringOrNumber) returns (CountResp) {};
+    rpc GetBlock(HashStringOrNumber) returns (ObjResp) {};
+    rpc GetTransactionFromBlock(InfoWithIndex) returns (ObjResp) {};
+}
+
+// ##############################
+// ## 1. create protocol buffer for sendTransaction
+// ## this protobuf should return a stream. Once the transaction is successful, stream will return confirmations
+// ## 2. split functions in multiple subs exmp - eth, personal, debug
+// ##############################

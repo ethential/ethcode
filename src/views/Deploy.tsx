@@ -69,7 +69,7 @@ const Deploy: React.FC<IProps> = ({ abi, bytecode, vscode }: IProps) => {
           abi,
           bytecode,
           params: constructorInputRef.current,
-          from: currAccount ? (currAccount.checksumAddr ? currAccount.checksumAddr : currAccount.value) : '0x',
+          from: currAccount,
         },
         testNetId: testNetID,
       });
@@ -78,7 +78,6 @@ const Deploy: React.FC<IProps> = ({ abi, bytecode, vscode }: IProps) => {
     }
   };
 
-  const publicKey = currAccount && currAccount.value ? currAccount.value : '';
   return (
     <div>
       <div className="deploy_container">
@@ -147,7 +146,7 @@ const Deploy: React.FC<IProps> = ({ abi, bytecode, vscode }: IProps) => {
             <h4>Public key</h4>
           </div>
           <div className="input-container">
-            <input className="input custom_input_css" type="text" value={publicKey} placeholder="public key" />
+            <input className="input custom_input_css" type="text" value={currAccount} placeholder="public key" />
           </div>
         </div>
 

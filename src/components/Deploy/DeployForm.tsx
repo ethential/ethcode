@@ -22,16 +22,8 @@ const DeployForm: React.FC<IProps> = ({ vscode, abi, bytecode, gasEstimate, cons
   const [buildTxToggle, setBuildTxToggle] = useState(true);
   const { control, register, getValues, setValue, handleSubmit } = useForm<TDeployForm>();
   // Context
-  const { testNetID, currAccount, pvtKey, unsignedTx, setError } = useContext(AppContext);
-  useEffect(() => {
-    const constructorABI: ABIDescription = abiHelpers.getConstructorABI(abi);
-    if (constructorABI) {
-      const inputs = constructorABI.inputs?.map((input) => {
-        return { ...input, value: '' };
-      });
-      if (inputs) setValue('constructorInput', inputs);
-    }
-  }, [abi]);
+  const { testNetID, currAccount, pvtKey, unsignedTx, constructorInputs, setError } = useContext(AppContext);
+  if (constructorInputs) setValue('constructorInput', constructorInputs);
 
   // set gas estimate
   useEffect(() => {
@@ -41,7 +33,7 @@ const DeployForm: React.FC<IProps> = ({ vscode, abi, bytecode, gasEstimate, cons
 
   const handleBuildTxn = (e: FormEvent | MouseEvent) => {
     e.preventDefault();
-    const publicKey = currAccount ? (currAccount.checksumAddr ? currAccount.checksumAddr : currAccount.value) : '0x';
+    const publicKey = currAccount;
     // create unsigned transaction here
     try {
       vscode.postMessage({

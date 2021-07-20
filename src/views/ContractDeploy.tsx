@@ -11,10 +11,9 @@ interface IProps {
   bytecode: string;
   abi: Array<ABIDescription>;
   vscode: any;
-  openAdvanceDeploy: () => void;
 }
 
-const ContractDeploy: React.FC<IProps> = ({ bytecode, abi, vscode, openAdvanceDeploy }: IProps) => {
+const ContractDeploy: React.FC<IProps> = ({ bytecode, abi, vscode }: IProps) => {
   const [gasEstimateToggle, setGasEstimateToggle] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const constructorInputRef = useRef<ConstructorInput[] | null>(null);
@@ -53,7 +52,7 @@ const ContractDeploy: React.FC<IProps> = ({ bytecode, abi, vscode, openAdvanceDe
           abi,
           bytecode,
           params: constructorInputRef.current,
-          from: currAccount ? (currAccount.checksumAddr ? currAccount.checksumAddr : currAccount.value) : '0x',
+          from: currAccount,
         },
         testNetId: testNetID,
       });
@@ -81,7 +80,6 @@ const ContractDeploy: React.FC<IProps> = ({ bytecode, abi, vscode, openAdvanceDe
                 gasEstimate={gasEstimate}
                 currAccount={currAccount}
                 constructorInputRef={constructorInputRef}
-                openAdvanceDeploy={openAdvanceDeploy}
               />
             )}
             <Button buttonType={ButtonType.Button} onClick={handleGetGasEstimate} disabled={gasEstimateToggle}>

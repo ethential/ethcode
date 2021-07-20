@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 // @ts-ignore
-import { toChecksumAddress } from './hash/util';
+import { toChecksumAddress } from '../hash/util';
 
-import { LocalAddressType } from './types';
+import { LocalAddressType } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const keythereum = require('keythereum');
